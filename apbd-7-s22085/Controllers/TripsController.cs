@@ -43,7 +43,7 @@ public class TripsController : ControllerBase
     
     // dodanie klienta do wycieczki
     // walidacja:
-    // - czy klient istnieje po PESEL (NotFound)
+    // - czy klient istnieje po PESEL (jeżeli nie, to dodajemy go do bazy danych)
     // - czy klient nie jest już zapisany na podaną wycieczkę (Bad Request)
     // - czy wycieczka istnieje (Not Found)
     // paymentDate może być null, registeredAt w Client_Trip ma być ustawione na aktualną datę (Date.NOW)
@@ -80,14 +80,12 @@ public class TripsController : ControllerBase
                 return BadRequest("Client already registered for this trip");
             }
 
-            DateTime paymentDate;
-            DateTime.TryParse(request.PaymentDate, out paymentDate);
             var newTrip = new ClientTrip
             {
                 IdClient = client.IdClient,
                 IdTrip = trip.IdTrip,
                 RegisteredAt = DateTime.Now,
-                PaymentDate = paymentDate 
+                PaymentDate = request.PaymentDate // might be null
             };
             await _database.ClientTrips.AddAsync(newTrip);
             await _database.SaveChangesAsync();
