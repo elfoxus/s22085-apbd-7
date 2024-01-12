@@ -69,11 +69,17 @@ public class TripsController : ControllerBase
                 await _database.Clients.AddAsync(client);
                 await _database.SaveChangesAsync();
             }
-            var trip = await _database.Trips.Where(t => t.IdTrip == idTrip && t.Name == request.TripName).FirstOrDefaultAsync();
+            var trip = await _database.Trips.Include(t => t.ClientTrips).Where(t => t.IdTrip == idTrip && t.Name == request.TripName).FirstOrDefaultAsync();
             if (trip == null)
             {
                 return NotFound("Trip does not exist");
             }
+            
+            if (trip.MaxPeople <= trip.ClientTrips.Count)
+            {
+                return BadRequest("Trip is full");
+            }
+            
             var clientTrip = await _database.ClientTrips.Where(ct => ct.IdClient == client.IdClient && ct.IdTrip == trip.IdTrip).FirstOrDefaultAsync();
             if (clientTrip != null)
             {
